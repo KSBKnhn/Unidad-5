@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>¿Cómo llego? – Unidad 5 · Stunden 9+10</title>
+<style>
+  :root{
+    --bg:#F5F5F7; --card:#FFFFFF; --text:#1D1D1F; --muted:#6E6E73;
+    --cond:#0A84FF; --cond-soft:#E5F1FF;
+    --rec:#FF9500;  --rec-soft:#FFF3E0; --rec-dark:#C97400;
+    --place:#30B0C7; --place-soft:#E4F6F9; --place-dark:#0F6A7C;
+    --ok:#34C759; --ok-soft:#E8F9EE;
+    --err:#FF3B30; --err-soft:#FFECEB;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text);
+    min-height:100vh; display:flex; justify-content:center;
+  }
+  .app{width:100%; max-width:480px; padding:16px 16px 40px; display:flex; flex-direction:column; gap:14px;}
+
+  .topbar{display:flex; align-items:center; justify-content:space-between; padding:6px 2px;}
+  .topbar h1{font-size:17px; font-weight:600; margin:0; letter-spacing:-0.2px;}
+  .score-pill{background:var(--card); border-radius:999px; padding:8px 14px; font-size:15px; font-weight:600;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);}
+  .progress{height:6px; background:#E3E3E8; border-radius:999px; overflow:hidden;}
+  .progress > div{height:100%; width:0%; background:var(--place); border-radius:999px; transition:width .4s ease;}
+
+  .card{background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+
+  .hero{text-align:center; padding:32px 22px;}
+  .hero .emoji{font-size:56px; line-height:1;}
+  .hero h2{font-size:25px; margin:14px 0 6px; letter-spacing:-0.4px;}
+  .hero p{color:var(--muted); font-size:15px; margin:0 0 22px; line-height:1.5;}
+  .levels-preview{display:flex; flex-direction:column; gap:10px; text-align:left; margin-bottom:24px;}
+  .lvl-row{display:flex; align-items:center; gap:12px; background:var(--bg); border-radius:14px; padding:12px 14px;}
+  .lvl-badge{width:32px; height:32px; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:15px; flex-shrink:0;}
+  .lvl-row span{font-size:14.5px;}
+  .b1{background:var(--place);} .b2{background:var(--cond);} .b3{background:var(--rec);}
+
+  .btn{display:block; width:100%; min-height:52px; border:none; border-radius:16px;
+    background:var(--place); color:#fff; font-size:17px; font-weight:600; font-family:inherit;
+    cursor:pointer; transition:transform .12s ease, opacity .12s ease;}
+  .btn:active{transform:scale(0.97);}
+  .btn.secondary{background:#E9E9EE; color:var(--text);}
+  .btn:disabled{opacity:.4;}
+
+  .level-head{display:flex; align-items:center; gap:10px;}
+  .level-head .lvl-badge{width:36px; height:36px;}
+  .level-head div h3{margin:0; font-size:17px;}
+  .level-head div p{margin:2px 0 0; font-size:13px; color:var(--muted);}
+
+  /* Level 1: Matching */
+  .match-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px;}
+  .match-col{display:flex; flex-direction:column; gap:10px;}
+  .tile{min-height:52px; border-radius:16px; border:2px solid transparent; padding:10px 12px;
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    font-size:16px; line-height:1.3; cursor:pointer; user-select:none;
+    transition:all .18s ease; background:var(--place-soft); color:var(--place-dark); font-weight:700;}
+  .tile.desc{background:var(--bg); color:var(--text); font-weight:500;}
+  .tile.selected{border-color:var(--place); transform:scale(0.98); background:#fff;}
+  .tile.matched{background:var(--ok-soft); color:#1c7c3c; border-color:var(--ok); pointer-events:none; opacity:.85;}
+  .tile.wrong{animation:shake .35s ease; border-color:var(--err); background:var(--err-soft);}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+  /* Level 2 */
+  .announce{background:var(--cond-soft); color:#0a3f77; border-radius:16px; padding:14px 16px; margin-top:16px;
+    font-size:16px; line-height:1.6; font-weight:600;}
+  .announce .tag{display:block; font-size:12.5px; font-weight:600; color:var(--cond); margin-bottom:4px;}
+  .q-sentence{font-size:17.5px; line-height:1.5; margin:14px 0 12px; font-weight:600;}
+  .choices{display:flex; flex-direction:column; gap:10px;}
+  .choice{min-height:50px; border-radius:14px; border:2px solid #E5E5EA; background:#fff;
+    font-size:16px; font-weight:600; font-family:inherit; padding:12px 16px; text-align:center; cursor:pointer;
+    transition:all .15s ease;}
+  .choice:active{transform:scale(0.98);}
+  .choice.ok{background:var(--ok-soft); border-color:var(--ok);}
+  .choice.no{background:var(--err-soft); border-color:var(--err); animation:shake .35s ease;}
+
+  .feedback{margin-top:14px; padding:12px 14px; border-radius:14px; font-size:14px; line-height:1.45; display:none;}
+  .feedback.show{display:block; animation:pop .25s ease;}
+  .feedback.good{background:var(--ok-soft); color:#1c7c3c;}
+  .feedback.bad{background:var(--err-soft); color:#a12622;}
+  @keyframes pop{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:none}}
+
+  /* Level 3 */
+  .l3-tag{display:inline-block; background:var(--cond-soft); color:#0a5ec7; border-radius:12px;
+    padding:8px 12px; font-size:13.5px; font-weight:600; margin-top:14px; line-height:1.4;}
+  .build-target{min-height:96px; background:var(--bg); border-radius:16px; padding:12px;
+    display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; margin:12px 0;}
+  .build-target.empty::before{content:"Tippe die Bausteine in der richtigen Reihenfolge an."; color:#A7A7AD; font-size:13.5px;}
+  .chip{border:none; border-radius:12px; padding:11px 14px; font-size:15px; font-weight:500; font-family:inherit;
+    cursor:pointer; transition:transform .12s ease; min-height:44px;}
+  .chip:active{transform:scale(0.95);}
+  .chip.pool{background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+  .chip.pool.rec{background:var(--rec-soft); color:var(--rec-dark); font-weight:600;}
+  .chip.placed{background:var(--text); color:#fff;}
+  .chip.used{opacity:.25; pointer-events:none;}
+  .chip-pool{display:flex; flex-wrap:wrap; gap:8px;}
+  .build-actions{display:flex; gap:10px; margin-top:16px;}
+  .build-actions .btn{flex:1;}
+  .target-ok{outline:3px solid var(--ok); background:var(--ok-soft);}
+  .target-no{outline:3px solid var(--err); animation:shake .35s ease;}
+
+  .result-score{text-align:center; padding:8px 0 4px;}
+  .result-score .big{font-size:52px; font-weight:700; letter-spacing:-1px;}
+  .result-score .grade{display:inline-block; margin-top:6px; background:var(--place-soft); color:var(--place-dark);
+    border-radius:999px; padding:8px 18px; font-size:16px; font-weight:600;}
+  .skill-list{display:flex; flex-direction:column; gap:10px; margin-top:18px;}
+  .skill{display:flex; gap:12px; align-items:flex-start; border-radius:14px; padding:12px 14px; font-size:14.5px; line-height:1.4;}
+  .skill.can{background:var(--ok-soft);}
+  .skill.practice{background:var(--rec-soft);}
+  .skill .icon{font-size:18px; line-height:1.3;}
+  .hidden{display:none !important;}
+  .next-wrap{margin-top:18px;}
+  .counter{font-size:13px; color:var(--muted); text-align:right; margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <h1>¿Cómo llego?</h1>
+    <div class="score-pill">⭐ <span id="score">0</span></div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <!-- START -->
+  <div class="card hero" id="screen-start">
+    <div class="emoji">🚇</div>
+    <h2>El camino en metro</h2>
+    <p>Kennst du die Ordinalzahlen?<br>Verstehst du Metro-Ansagen?<br>Zeig es in 3 Levels!</p>
+    <div class="levels-preview">
+      <div class="lvl-row"><div class="lvl-badge b1">1</div><span><strong>Erkennen:</strong> Ordinalzahlen verbinden</span></div>
+      <div class="lvl-row"><div class="lvl-badge b2">2</div><span><strong>Anwenden:</strong> Metro-Ansagen verstehen</span></div>
+      <div class="lvl-row"><div class="lvl-badge b3">3</div><span><strong>Produzieren:</strong> Wegbeschreibungen bauen</span></div>
+    </div>
+    <button class="btn" onclick="startGame()">Los geht's</button>
+  </div>
+
+  <!-- LEVEL 1 -->
+  <div class="card hidden" id="screen-l1">
+    <div class="level-head">
+      <div class="lvl-badge b1">1</div>
+      <div><h3>Los números ordinales</h3><p>Tippe eine Zahl und dann das passende Wort.</p></div>
+    </div>
+    <div class="match-grid">
+      <div class="match-col" id="col-num"></div>
+      <div class="match-col" id="col-word"></div>
+    </div>
+    <div class="counter"><span id="l1-count">0</span> / 6 Paare</div>
+  </div>
+
+  <!-- LEVEL 2 -->
+  <div class="card hidden" id="screen-l2">
+    <div class="level-head">
+      <div class="lvl-badge b2">2</div>
+      <div><h3>Entiende el camino</h3><p>Lies die Wegbeschreibung genau.</p></div>
+    </div>
+    <div class="announce" id="l2-announce"></div>
+    <div class="q-sentence" id="l2-q"></div>
+    <div class="choices" id="l2-choices"></div>
+    <div class="feedback" id="l2-feedback"></div>
+    <div class="next-wrap hidden" id="l2-next"><button class="btn" onclick="l2Next()">Weiter</button></div>
+    <div class="counter">Aufgabe <span id="l2-count">1</span> / 6</div>
+  </div>
+
+  <!-- LEVEL 3 -->
+  <div class="card hidden" id="screen-l3">
+    <div class="level-head">
+      <div class="lvl-badge b3">3</div>
+      <div><h3>Describe el camino</h3><p>Orange = feste Redemittel-Bausteine.</p></div>
+    </div>
+    <span class="l3-tag" id="l3-tag"></span>
+    <div class="build-target empty" id="l3-target"></div>
+    <div class="chip-pool" id="l3-pool"></div>
+    <div class="build-actions">
+      <button class="btn secondary" onclick="l3Reset()">Zurücksetzen</button>
+      <button class="btn" id="l3-check" onclick="l3Check()">Prüfen</button>
+    </div>
+    <div class="feedback" id="l3-feedback"></div>
+    <div class="next-wrap hidden" id="l3-next"><button class="btn" onclick="l3Next()">Weiter</button></div>
+    <div class="counter">Weg <span id="l3-count">1</span> / 4</div>
+  </div>
+
+  <!-- ERGEBNIS -->
+  <div class="card hidden" id="screen-end">
+    <div class="result-score">
+      <div style="font-size:40px">🏁</div>
+      <div class="big"><span id="end-score">0</span><span style="font-size:22px; color:var(--muted)"> / 30</span></div>
+      <div class="grade" id="end-grade"></div>
+    </div>
+    <div class="skill-list" id="end-skills"></div>
+    <div class="next-wrap"><button class="btn" onclick="location.reload()">Noch einmal spielen</button></div>
+  </div>
+
+</div>
+
+<script>
+/* ---------- Daten: Ordinalzahlen S. 311 + Metro-Redemittel S. 84 (Aufg. 1) ---------- */
+
+const PAIRS = [
+  {n:"1.º", w:"primero/-a"},
+  {n:"3.º", w:"tercero/-a"},
+  {n:"5.º", w:"quinto/-a"},
+  {n:"7.º", w:"séptimo/-a"},
+  {n:"9.º", w:"noveno/-a"},
+  {n:"10.º", w:"décimo/-a"}
+];
+
+const L2 = [
+  {an:"Coges la línea marrón en dirección a Argüelles y te bajas en la quinta parada.",
+   q:"¿En qué parada te bajas?", ok:"en la parada número 5", opts:["en la parada número 5","en la parada número 4","en la parada número 6"],
+   why:"la <strong>quinta</strong> parada = die fünfte Haltestelle."},
+  {an:"Coges la línea roja en dirección a Cuatro Caminos y te bajas en la cuarta parada.",
+   q:"¿En qué parada te bajas?", ok:"en la parada número 4", opts:["en la parada número 4","en la parada número 3","en la parada número 14"],
+   why:"la <strong>cuarta</strong> parada = die vierte Haltestelle."},
+  {an:"Coges la línea amarilla en dirección a Moncloa y te bajas en la primera parada.",
+   q:"¿En qué parada te bajas?", ok:"en la parada número 1", opts:["en la parada número 1","en la parada número 10","en la parada número 3"],
+   why:"la <strong>primera</strong> parada = die erste Haltestelle."},
+  {an:"«___ la línea verde en dirección a Colón.»",
+   q:"Welches Wort fehlt?", ok:"Coges", opts:["Coges","Vas","Pones"],
+   why:"Die Metro-Linie ‚nimmt‘ man: <strong>coger la línea</strong>."},
+  {an:"«Te bajas ___ la segunda parada.»",
+   q:"Welches Wort fehlt?", ok:"en", opts:["en","a","de"],
+   why:"bajarse <strong>en</strong> la … parada = an der … Haltestelle aussteigen."},
+  {an:"«Coges la línea azul en dirección ___ Goya.»",
+   q:"Welches Wort fehlt?", ok:"a", opts:["a","de","en"],
+   why:"en dirección <strong>a</strong> + Endstation = in Richtung …"}
+];
+
+const L3 = [
+  {tag:"Estás en Goya. Quieres ir a Bilbao. (línea marrón → Argüelles, 5.ª parada)", chips:[
+    {t:"Coges", c:"rec"},{t:"la línea marrón", c:""},{t:"en dirección a", c:"rec"},{t:"Argüelles", c:""},
+    {t:"y te bajas en", c:"rec"},{t:"la quinta parada.", c:""}]},
+  {tag:"Estás en Sevilla. Quieres ir a Noviciado. (línea roja → Cuatro Caminos, 4.ª parada)", chips:[
+    {t:"Coges", c:"rec"},{t:"la línea roja", c:""},{t:"en dirección a", c:"rec"},{t:"Cuatro Caminos", c:""},
+    {t:"y te bajas en", c:"rec"},{t:"la cuarta parada.", c:""}]},
+  {tag:"Estás en Callao. Quieres ir a Plaza de España. (línea amarilla → Moncloa, 1.ª parada)", chips:[
+    {t:"Coges", c:"rec"},{t:"la línea amarilla", c:""},{t:"en dirección a", c:"rec"},{t:"Moncloa", c:""},
+    {t:"y te bajas en", c:"rec"},{t:"la primera parada.", c:""}]},
+  {tag:"Erkläre: línea azul → Colón, 3.ª parada", chips:[
+    {t:"Coges", c:"rec"},{t:"la línea azul", c:""},{t:"en dirección a", c:"rec"},{t:"Colón", c:""},
+    {t:"y te bajas en", c:"rec"},{t:"la tercera parada.", c:""}]}
+];
+
+/* ---------- State ---------- */
+let score = 0;
+const lvlScore = {1:0, 2:0, 3:0};
+const LVL_MAX = {1:6, 2:12, 3:12};
+let totalSteps = 6 + 6 + 4, doneSteps = 0;
+
+const $ = id => document.getElementById(id);
+function addScore(n, lvl){ score += n; lvlScore[lvl] += n; $("score").textContent = score; }
+function step(){ doneSteps++; $("bar").style.width = (doneSteps/totalSteps*100) + "%"; }
+function show(id){
+  ["screen-start","screen-l1","screen-l2","screen-l3","screen-end"].forEach(s => $(s).classList.add("hidden"));
+  $(id).classList.remove("hidden");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+function shuffle(a){ return a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]); }
+
+function startGame(){ show("screen-l1"); initL1(); }
+
+/* ---------- Level 1 ---------- */
+let sel = null, matched = 0, l1Missed = {};
+function initL1(){
+  const nums  = shuffle(PAIRS.map((x,i)=>({i, txt:x.n})));
+  const words = shuffle(PAIRS.map((x,i)=>({i, txt:x.w})));
+  nums.forEach(o => $("col-num").appendChild(mkTile(o, false)));
+  words.forEach(o => $("col-word").appendChild(mkTile(o, true)));
+}
+function mkTile(o, isWord){
+  const el = document.createElement("div");
+  el.className = "tile" + (isWord ? " desc" : "");
+  el.textContent = o.txt;
+  el.dataset.i = o.i; el.dataset.side = isWord ? "w" : "n";
+  el.onclick = () => tapTile(el);
+  return el;
+}
+function tapTile(el){
+  if(el.classList.contains("matched")) return;
+  if(!sel){ sel = el; el.classList.add("selected"); return; }
+  if(sel === el){ el.classList.remove("selected"); sel = null; return; }
+  if(sel.dataset.side === el.dataset.side){
+    sel.classList.remove("selected"); sel = el; el.classList.add("selected"); return;
+  }
+  const i = el.dataset.i, first = sel;
+  first.classList.remove("selected");
+  if(first.dataset.i === i){
+    first.classList.add("matched"); el.classList.add("matched");
+    if(l1Missed[i] === undefined){ addScore(1, 1); }
+    matched++; step();
+    $("l1-count").textContent = matched;
+    if(matched === 6) setTimeout(()=>{ show("screen-l2"); renderL2(); }, 650);
+  } else {
+    l1Missed[i] = true; l1Missed[first.dataset.i] = true;
+    first.classList.add("wrong"); el.classList.add("wrong");
+    setTimeout(()=>{ first.classList.remove("wrong"); el.classList.remove("wrong"); }, 400);
+  }
+  sel = null;
+}
+
+/* ---------- Level 2 ---------- */
+let l2i = 0, l2Tries = 0;
+function renderL2(){
+  const q = L2[l2i]; l2Tries = 0;
+  $("l2-count").textContent = l2i + 1;
+  $("l2-announce").innerHTML = '<span class="tag">🚇 Wegbeschreibung</span>' + q.an;
+  $("l2-q").textContent = q.q;
+  $("l2-feedback").className = "feedback"; $("l2-feedback").innerHTML = "";
+  $("l2-next").classList.add("hidden");
+  const box = $("l2-choices"); box.innerHTML = "";
+  shuffle(q.opts.slice()).forEach(o=>{
+    const b = document.createElement("button");
+    b.className = "choice"; b.textContent = o;
+    b.onclick = () => l2Answer(b, o === q.ok, q);
+    box.appendChild(b);
+  });
+}
+function l2Answer(btn, correct, q){
+  const fb = $("l2-feedback");
+  if(correct){
+    btn.classList.add("ok");
+    document.querySelectorAll("#l2-choices .choice").forEach(c=>c.disabled=true);
+    const pts = l2Tries === 0 ? 2 : 1;
+    addScore(pts, 2); step();
+    fb.className = "feedback show good";
+    fb.innerHTML = "✓ ¡Muy bien! " + q.why + (l2Tries === 0 ? " <em>(+2 Punkte)</em>" : " <em>(2. Versuch: +1 Punkt)</em>");
+    $("l2-next").classList.remove("hidden");
+  } else {
+    l2Tries++;
+    btn.classList.add("no"); btn.disabled = true;
+    fb.className = "feedback show bad";
+    fb.innerHTML = "✗ Noch nicht ganz – lies die Wegbeschreibung oben noch einmal Wort für Wort.";
+  }
+}
+function l2Next(){
+  l2i++;
+  if(l2i < L2.length){ renderL2(); }
+  else { show("screen-l3"); renderL3(); }
+}
+
+/* ---------- Level 3 ---------- */
+let l3i = 0, l3Tries = 0, placedIdx = [];
+function renderL3(){
+  const s = L3[l3i]; l3Tries = 0; placedIdx = [];
+  $("l3-count").textContent = l3i + 1;
+  $("l3-tag").textContent = s.tag;
+  $("l3-feedback").className = "feedback"; $("l3-feedback").innerHTML = "";
+  $("l3-next").classList.add("hidden");
+  $("l3-check").disabled = false;
+  const target = $("l3-target");
+  target.innerHTML = ""; target.className = "build-target empty";
+  const pool = $("l3-pool"); pool.innerHTML = "";
+  shuffle(s.chips.map((c,idx)=>({...c, idx}))).forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "chip pool" + (c.c ? " " + c.c : ""); b.textContent = c.t; b.dataset.idx = c.idx;
+    b.onclick = () => placeChip(b, c);
+    pool.appendChild(b);
+  });
+}
+function placeChip(poolBtn, c){
+  if(poolBtn.classList.contains("used")) return;
+  poolBtn.classList.add("used");
+  placedIdx.push(c.idx);
+  const target = $("l3-target");
+  target.classList.remove("empty","target-ok","target-no");
+  const b = document.createElement("button");
+  b.className = "chip placed"; b.textContent = c.t;
+  b.onclick = () => {
+    placedIdx = placedIdx.filter(x => x !== c.idx);
+    b.remove(); poolBtn.classList.remove("used");
+    if(placedIdx.length === 0) target.classList.add("empty");
+    target.classList.remove("target-ok","target-no");
+  };
+  target.appendChild(b);
+}
+function l3Reset(){ renderL3(); }
+function l3Check(){
+  const s = L3[l3i];
+  const target = $("l3-target"), fb = $("l3-feedback");
+  if(placedIdx.length !== s.chips.length){
+    fb.className = "feedback show bad";
+    fb.innerHTML = "Es fehlen noch Bausteine – setze alle Chips ein.";
+    return;
+  }
+  const correct = placedIdx.every((v,i)=>v===i);
+  if(correct){
+    target.classList.add("target-ok"); target.classList.remove("target-no");
+    const pts = l3Tries === 0 ? 3 : 1;
+    addScore(pts, 3); step();
+    fb.className = "feedback show good";
+    fb.innerHTML = "✓ ¡Perfecto! " + s.chips.map(c => c.c === "rec"
+      ? '<span style="color:var(--rec); font-weight:700">' + c.t + "</span>"
+      : c.t).join(" ")
+      + (l3Tries === 0 ? " <em>(+3 Punkte)</em>" : " <em>(+1 Punkt)</em>");
+    $("l3-check").disabled = true;
+    $("l3-next").classList.remove("hidden");
+  } else {
+    l3Tries++;
+    target.classList.add("target-no");
+    fb.className = "feedback show bad";
+    fb.innerHTML = "✗ Die Reihenfolge stimmt noch nicht. Tipp: <strong style='color:var(--rec)'>Coges</strong> + Linie + <strong style='color:var(--rec)'>en dirección a</strong> + Station + <strong style='color:var(--rec)'>y te bajas en</strong> + Haltestelle.";
+    setTimeout(()=>target.classList.remove("target-no"), 450);
+  }
+}
+function l3Next(){
+  l3i++;
+  if(l3i < L3.length){ renderL3(); }
+  else { finish(); }
+}
+
+/* ---------- Auswertung ---------- */
+const GRADES = ["6","5−","5","5+","4−","4","4+","3−","3","3+","2−","2","2+","1−","1","1+"];
+function finish(){
+  show("screen-end");
+  $("end-score").textContent = score;
+  const np = Math.round(score / 30 * 15);
+  $("end-grade").textContent = np + " Notenpunkte · Note " + GRADES[np];
+  const skills = [
+    {lvl:1, txt:"Ich kenne die Ordinalzahlen von 1.º bis 10.º."},
+    {lvl:2, txt:"Ich verstehe Metro-Wegbeschreibungen im Detail."},
+    {lvl:3, txt:"Ich kann selbst einen Metro-Weg beschreiben: Coges … en dirección a … y te bajas en …"}
+  ];
+  const box = $("end-skills"); box.innerHTML = "";
+  skills.forEach(s=>{
+    const pct = lvlScore[s.lvl] / LVL_MAX[s.lvl];
+    const good = pct >= 0.75;
+    const el = document.createElement("div");
+    el.className = "skill " + (good ? "can" : "practice");
+    el.innerHTML = '<span class="icon">' + (good ? "✅" : "🔄") + '</span><span><strong>'
+      + (good ? "Das kannst du schon:" : "Das übst du noch:") + "</strong> " + s.txt + "</span>";
+    box.appendChild(el);
+  });
+}
+</script>
+</body>
+</html>
