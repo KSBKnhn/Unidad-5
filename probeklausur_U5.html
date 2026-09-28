@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fit für die Klausur – Unidad 5</title>
+<style>
+  :root{
+    --bg:#F5F5F7; --card:#FFFFFF; --text:#1D1D1F; --muted:#6E6E73;
+    --cond:#0A84FF; --cond-soft:#E5F1FF;
+    --rec:#FF9500;  --rec-soft:#FFF3E0; --rec-dark:#C97400;
+    --place:#30B0C7; --place-soft:#E4F6F9; --place-dark:#0F6A7C;
+    --ok:#34C759; --ok-soft:#E8F9EE;
+    --err:#FF3B30; --err-soft:#FFECEB;
+    --warn:#FFCC00; --warn-soft:#FFF8DE;
+    --radius:20px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); margin:0;
+    display:flex; justify-content:center; min-height:100vh;
+  }
+  .app{width:100%; max-width:720px; padding:16px 16px 60px; display:flex; flex-direction:column; gap:16px;}
+
+  .hero{text-align:center; padding:26px 18px 8px;}
+  .hero .emoji{font-size:52px; line-height:1;}
+  .hero h1{font-size:27px; margin:12px 0 6px; letter-spacing:-0.5px;}
+  .hero p{color:var(--muted); font-size:15px; line-height:1.55; margin:0; max-width:520px; margin-inline:auto;}
+
+  .card{background:var(--card); border-radius:var(--radius); padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.05);}
+
+  .dash h2{font-size:18px; margin:0 0 4px;}
+  .dash .sub{font-size:13px; color:var(--muted); margin:0 0 14px;}
+  .tiles{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media(min-width:560px){.tiles{grid-template-columns:repeat(3,1fr);}}
+  .tile{background:var(--bg); border-radius:14px; padding:12px 13px; cursor:pointer; border:2px solid transparent;
+    transition:transform .12s ease; text-align:left; font-family:inherit; color:inherit;}
+  .tile:active{transform:scale(0.97);}
+  .tile .dot{width:12px; height:12px; border-radius:999px; display:inline-block; margin-right:7px; vertical-align:-1px;
+    background:#C7C7CC;}
+  .tile.st-g .dot{background:var(--ok);} .tile.st-y .dot{background:var(--warn);} .tile.st-r .dot{background:var(--err);}
+  .tile.st-g{border-color:var(--ok);} .tile.st-r{border-color:var(--err);}
+  .tile .nm{font-size:13.5px; font-weight:600; line-height:1.3;}
+  .tile .pt{display:block; font-size:11.5px; color:var(--muted); margin-top:3px;}
+  .plan{margin-top:14px; border-radius:14px; padding:13px 15px; font-size:14px; line-height:1.6;}
+  .plan.empty{background:var(--cond-soft); color:#0a5ec7;}
+  .plan.todo{background:var(--rec-soft); color:var(--rec-dark);}
+  .plan.done{background:var(--ok-soft); color:#1c7c3c;}
+  .plan b{display:block; margin-bottom:4px;}
+  .plan a{color:inherit; font-weight:700;}
+
+  section.komp{scroll-margin-top:12px;}
+  .khead{display:flex; align-items:center; gap:12px; cursor:pointer; user-select:none;}
+  .khead .dot{width:14px; height:14px; border-radius:999px; background:#C7C7CC; flex-shrink:0;}
+  section.st-g .khead .dot{background:var(--ok);}
+  section.st-y .khead .dot{background:var(--warn);}
+  section.st-r .khead .dot{background:var(--err);}
+  .khead h2{font-size:17px; margin:0; flex:1; line-height:1.35;}
+  .khead .pts{font-size:12px; color:var(--muted); white-space:nowrap;}
+  .khead .chev{font-size:14px; color:var(--muted); transition:transform .25s ease;}
+  section.open .khead .chev{transform:rotate(90deg);}
+  .kbody{display:none; margin-top:16px;}
+  section.open .kbody{display:block;}
+
+  .kann{background:var(--bg); border-radius:14px; padding:12px 15px; margin-bottom:14px;}
+  .kann div{font-size:14px; line-height:1.6;}
+  .kann div::before{content:"✓ "; color:var(--place);}
+
+  h3.sub{font-size:13px; color:var(--muted); font-weight:600; margin:16px 0 8px;
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+
+  .merk{border-radius:16px; padding:14px 16px; font-size:14.5px; line-height:1.65; margin-bottom:8px;}
+  .merk.orange{background:var(--rec-soft); border:2px solid var(--rec);}
+  .merk.blue{background:var(--cond-soft);}
+  .merk .big{font-size:16px; font-weight:700;}
+  .merk .c{color:var(--cond); font-weight:700;}
+  .merk .r{color:var(--rec-dark); font-weight:700;}
+  .merk .t{color:var(--place-dark); font-weight:700;}
+  .prepgrid{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px;}
+  .prep{background:#fff; border-radius:12px; padding:8px 4px; text-align:center;}
+  .prep .sc{font-size:20px; line-height:1.2;}
+  .prep .es{font-size:12.5px; font-weight:700; color:var(--rec-dark);}
+  .prep .de{font-size:10.5px; color:var(--muted);}
+
+  .check{background:var(--bg); border-radius:16px; padding:15px;}
+  .stage{display:inline-block; border-radius:999px; padding:3px 10px; font-size:11px; font-weight:700; margin-bottom:8px;}
+  .stage.s1{background:var(--place-soft); color:var(--place-dark);}
+  .stage.s2{background:var(--cond-soft); color:#0a5ec7;}
+  .stage.s3{background:var(--rec-soft); color:var(--rec-dark);}
+  .check .q{font-size:15.5px; font-weight:600; line-height:1.5; margin-bottom:10px;}
+  .check .q .anz{display:block; background:var(--place-soft); color:#123f47; font-weight:500; font-size:13.5px;
+    border-radius:10px; padding:8px 11px; margin-top:8px; line-height:1.55;}
+  .check .q .bau{display:block; color:var(--muted); font-weight:500; font-size:13px; margin-top:4px;}
+  .opts{display:flex; flex-direction:column; gap:8px;}
+  .opt{min-height:46px; border-radius:12px; border:2px solid #E5E5EA; background:#fff;
+    font-size:15px; font-family:inherit; padding:10px 14px; text-align:left; cursor:pointer; transition:all .15s ease;}
+  .opt:active{transform:scale(0.98);}
+  .opt.ok{background:var(--ok-soft); border-color:var(--ok); font-weight:600;}
+  .opt.no{background:var(--err-soft); border-color:var(--err);}
+  .typerow{display:flex; gap:8px;}
+  .typerow input{flex:1; min-height:48px; border:2px solid #E5E5EA; border-radius:12px; padding:0 13px;
+    font-size:16px; font-family:inherit; outline:none; min-width:0;}
+  .typerow input:focus{border-color:var(--cond);}
+  .typerow input.ok{border-color:var(--ok); background:var(--ok-soft);}
+  .typerow input.no{border-color:var(--err); background:var(--err-soft);}
+  .typerow button{border:none; border-radius:12px; background:var(--cond); color:#fff; font-family:inherit;
+    font-size:15px; font-weight:600; padding:0 16px; cursor:pointer;}
+  .thint{font-size:11.5px; color:var(--muted); margin-top:6px; line-height:1.4;}
+  .fb{margin-top:9px; font-size:13px; line-height:1.55; border-radius:10px; padding:8px 11px; display:none;}
+  .fb.show{display:block;}
+  .fb.good{background:var(--ok-soft); color:#1c7c3c;}
+  .fb.bad{background:var(--err-soft); color:#a12622;}
+  .cnav{display:flex; justify-content:space-between; align-items:center; margin-top:12px;}
+  .cnav .cnt{font-size:12.5px; color:var(--muted);}
+  .cnav button{border:none; border-radius:12px; background:var(--text); color:#fff; font-family:inherit;
+    font-size:14px; font-weight:600; padding:10px 18px; cursor:pointer; min-height:44px;}
+  .cnav button:disabled{opacity:.35;}
+  .cres{text-align:center; padding:6px 0;}
+  .cres .sc{font-size:30px; font-weight:700;}
+  .cres p{font-size:13.5px; color:var(--muted); margin:6px 0 12px; line-height:1.5;}
+  .cres button{border:none; border-radius:12px; background:#E9E9EE; color:var(--text); font-family:inherit;
+    font-size:14px; font-weight:600; padding:10px 18px; cursor:pointer; min-height:44px;}
+
+  .ampel{display:flex; gap:8px;}
+  .ampel button{flex:1; min-height:48px; border-radius:12px; border:2px solid #E5E5EA; background:#fff;
+    font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; transition:all .15s ease;}
+  .ampel button:active{transform:scale(0.97);}
+  .ampel button.sel-g{background:var(--ok-soft); border-color:var(--ok);}
+  .ampel button.sel-y{background:var(--warn-soft); border-color:var(--warn);}
+  .ampel button.sel-r{background:var(--err-soft); border-color:var(--err);}
+
+  .uben{display:flex; flex-direction:column; gap:10px;}
+  .gamewrap{display:flex; gap:10px; align-items:stretch;}
+  .gamewrap a.game{flex:1; display:flex; align-items:center; gap:12px; background:var(--place); color:#fff;
+    text-decoration:none; border-radius:14px; padding:13px 14px; font-size:14.5px; font-weight:600; min-height:82px;}
+  .gamewrap a.game.alt{background:var(--place-dark);}
+  .gamewrap a.game .ic{font-size:22px;}
+  .qrbox{width:92px; flex-shrink:0; background:#fff; border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,0.08);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:7px;}
+  .qrbox svg{width:66px; height:66px; display:block;}
+  .qrbox span{font-size:9.5px; color:var(--muted); font-weight:600;}
+  .uben .tip{background:var(--bg); border-radius:12px; padding:10px 14px; font-size:13.5px; line-height:1.55;}
+  .uben .tip b{color:var(--rec-dark);}
+
+  .pk a.pdf{display:flex; align-items:center; gap:12px; background:var(--cond); color:#fff; text-decoration:none;
+    border-radius:14px; padding:13px 16px; font-size:15px; font-weight:600; margin-top:10px; min-height:50px;}
+  .pk a.pdf.sec{background:#E9E9EE; color:var(--text);}
+  .pk ol{padding-left:22px; font-size:14px; line-height:1.65; margin:10px 0 0;}
+
+  footer{text-align:center; font-size:12px; color:var(--muted); line-height:1.7; padding-top:6px;}
+  footer button{border:none; background:none; color:var(--err); font-family:inherit; font-size:12px;
+    text-decoration:underline; cursor:pointer;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hero">
+    <div class="emoji">🎯</div>
+    <h1>Fit für die Klausur – Unidad 5</h1>
+    <p>Deine Kannliste für <em>En Madrid</em>: Teste dich in 8 Stufen pro Bereich – vom Einsetzen bis zum
+    freien Schreiben – und übe genau da weiter, wo du noch Punkte holst. Dein Stand bleibt auf diesem Gerät.</p>
+  </div>
+
+  <div class="card dash">
+    <h2>📊 Mein Stand</h2>
+    <p class="sub">Tippe eine Kachel, um zum Bereich zu springen. 🟢 sicher · 🟡 fast · 🔴 üben · ⚪ noch nicht getestet</p>
+    <div class="tiles" id="tiles"></div>
+    <div class="plan empty" id="plan"></div>
+  </div>
+
+  <div id="sections"></div>
+
+  <div class="card pk" id="klausur">
+    <h2 style="font-size:17px; margin:0;">📋 Die Generalprobe: Übungsklausur</h2>
+    <ol>
+      <li>Nimm dir <strong>90 Minuten</strong> – ohne Buch, Heft und Handy-Hilfe.</li>
+      <li>Drucke die Übungsklausur oder schreibe die Antworten auf Papier.</li>
+      <li>Korrigiere danach <strong>mit anderem Stift</strong> mithilfe des Lösungsbogens.</li>
+      <li>Notiere deine offenen Fragen – wir klären sie vor der Klausur.</li>
+    </ol>
+    <a class="pdf" href="https://ksbknhn.github.io/Unidad-5/probeklausur.pdf">📄 Übungsklausur „Sevilla" (PDF)</a>
+    <a class="pdf sec" href="https://ksbknhn.github.io/Unidad-5/probeklausur_loesung.pdf">✅ Lösungsbogen zur Selbstkorrektur (PDF)</a>
+  </div>
+
+  <footer>
+    Unidad 5 · A_tope.com · Seitenangaben beziehen sich auf dein Lehrbuch.<br>
+    Dein Lernstand liegt nur im Browser dieses Geräts. <button onclick="resetAll()">Meinen Stand zurücksetzen</button>
+  </footer>
+</div>
+
+<script>
+/* ================= QR-CODES (29 Zeilen × 8 Hex = 29 Bit pro Zeile) ================= */
+const QRS = {"q0102": "1fce957f10430841174e665d1756095d1755cf5d104cd5411fd5557f0009710018ed89181f343e361e7b3860110610481cfc65611e3d6f73144cb8cc0105405506fd810c1488a3771a793a09158a105016d7ebf70015ed181fd53b5c10580712174933f8174a7f2d174466fe105840ad1fd7eac4", "q03": "1fc3957f104c88411741665d1751c95d17588f5d1043d5411fd5557f0006310018eac9180709fe36065438601a99104815fb256106206f7309d378cc08064055034ac10c141da3771bc6ba0910a5505015fdebf70018ed181fdb7b5c10560711174cf3fa174dbf2d1748e6fe1059c0ad1fdd6ac4", "q0405": "1fc43f7f105c744117501e5d1749f65d175d2c5d105532411fd5557f00164d001a63b1760b8bc1c91ed3dbee140ff7d60af6cfcb1c02538011c2402f02baffaa01d162820a1144e914f390a306b52ca3164dd3f4001613171fd1d9521049e11c174f99f2175143de17425e1d1057bf521fdf094a", "q0607": "1fc43f7f105cf44117501e5d1749f65d175d2c5d105532411fd5557f00164d001a63b1760b1bc1c913e3dbee1caff7d61446cfcb1c8253801bcec02f0696ffaa03f162820f9144e9134390a304a92ca31445d3f4001e13171fd9d952104de11c174b99f2175d43de174a5e1d1053bf521fd7094a", "q08": "1fd3157f105d0c411747fd5d17449c5d175e545d1052d1411fd5557f001735001cdc12f3161cab6303c2e30d0d081458156b256100b16b631345a3a10fb7150012d41a610c94a7671b5eba09071c54401bef31fa0011b91d1fc9a151105f0311174cf3fa1744bb3d175e3d93105895f81fd3b1a9", "q0910": "1fde157f10520c411748bd5d17435c5d1753145d105dd1411fd5557f001875001cdb52f31f216b630c5de30d09175458144c65610aa46b631c7ee3a11d081500094f5a610039a7671a6d3a09058b14401e4d31fa0014b91d1fc3e15110590312174133f817477b3d1756bd93105d15f81fd931a9", "q1112": "1fde957f10521c411748bd5d17435c5d1753145d105dd1411fd5557f001875001cdb52f31aa16b631cdde30d07075458097c656104846b63075e63a112ac150018f35a610605a7671fe53a09051f1440196531fa0010b91d1fcfe15110550312174933f817437b3d1756bd93105915f81fd131a9", "q1314": "1fc43f7f105ca44117505e5d1749f65d175d2c5d105532411fd5557f00164d001a63b1760aabc1c901c3dbee159fb7d606d6cfcb0da253801b7a402f05a2bfaa1cc96282099944e9156390a300b12ca315f5d3f4001a13171fd9d9521045e11c174799f2175143de17465e1d1057bf521fdf094a", "q1516": "1fd0ad7f10539b4117597a5d175d645d174d2c5d105c16411fd5557f00064d0019c56a2f1c20ac7f156c241115b96cbb03e25d820c8dac7f1b53e4bd17362de31a7d62821d34607b014cfd1503352ca31d5f09f900117f111fc2275d105f3b11175b0bfb1746bc21174b7a8f105b2d1b1fdf094a", "q1718": "1fc43f7f105ce44117505e5d1749f65d175d2c5d105532411fd5557f00164d001a63b176159bc1c918c3dbee03afb7d61d46cfcb07aad3800046002f0a16bfaa1d5562820db544e9154790a302212ca31261d3f4001a13171fddd9521049e11c174f99f2175143de174a5e1d105bbf521fdb094a"};
+
+function qrSvg(key){
+  const hex = QRS[key];
+  if(!hex) return "";
+  let cells = "";
+  for(let y = 0; y < 29; y++){
+    const v = parseInt(hex.slice(y*8, y*8+8), 16);
+    for(let x = 0; x < 29; x++){
+      if(v & (1 << (28 - x))) cells += '<rect x="' + (x+2) + '" y="' + (y+2) + '" width="1" height="1"/>';
+    }
+  }
+  return '<svg viewBox="0 0 33 33" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+    + '<rect width="33" height="33" fill="#fff"/><g fill="#000">' + cells + '</g></svg>';
+}
+
+/* ================= KOMPETENZ-DATEN ================= */
+
+const ANZ1 = '<span class="anz">📄 Piso en Lavapiés: Somos dos estudiantes y alquilamos una habitación luminosa con balcón. Está amueblada: cama, mesa y armario. 295 €/mes + 40 € de gastos. Estancia mínima: cuatro meses. Cerca hay un supermercado y una parada de metro.</span>';
+
+const KOMP = [
+ {id:"k1", nm:"Anzeigen lesen", pts:"Klausur Teil 1 · 26 P.", w:26,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/09_10.html", txt:"Spiel: Anzeigen und Metro (Stunden 9+10)", qr:"q0910"},
+  game2:{href:"https://ksbknhn.github.io/Unidad-5/04_05.html", txt:"Zweites Spiel: Anzeige lesen (Stunden 4+5)", qr:"q0405"},
+  kann:["Ich verstehe spanische Wohnungsanzeigen im Detail.","Ich kann die Klausur-Tabelle in Stichworten ausfüllen: ¿Dónde? ¿Cuántas personas? ¿Cuánto cuesta? ¿Gastos incluidos?"],
+  merk:`<div class="merk blue"><span class="big">🔑 Schlüsselwörter der Anzeigen</span><br>
+    <span class="t">los gastos incluidos</span> = Nebenkosten inklusive · <span class="t">amueblado/-a</span> = möbliert ·
+    <span class="t">la estancia mínima</span> = Mindestwohndauer · <span class="t">los metros cuadrados (m²)</span> = Quadratmeter ·
+    <span class="t">luminoso/-a</span> = hell · <span class="t">el alquiler</span> = die Miete<br>
+    <b>Tabellen-Tipp:</b> Erst die Fragen lesen, dann die Anzeige – und in Stichworten antworten, keine ganzen Sätze nötig.</div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Teil 1</b> · Buch S. 81 (Chamberí/Retiro noch einmal lesen).`,
+  check:[
+   {t:"mc", q:"«amueblada» heißt:" + ANZ1, opts:["möbliert","hell","vermietet"], ok:0,
+    why:"amueblado/-a kommt von los muebles (die Möbel)."},
+   {t:"mc", q:"¿Cuánto pagas en total al mes?" + ANZ1, opts:["335 €","295 €","255 €"], ok:0,
+    why:"295 € Miete + 40 € gastos = 335 € – diese Falle kommt gern in der Klausur!"},
+   {t:"type", q:"Wie heißt «die Mindestwohndauer» auf Spanisch? (mit Artikel)", accepts:["la estancia minima","estancia minima"],
+    model:"la estancia mínima", why:"Steht in fast jeder Anzeige – merk dir das Wortpaar."},
+   {t:"type", q:"¿Cuántas personas viven ya en el piso? – Antworte in Stichworten." + ANZ1, accepts:["dos","dos estudiantes","dos personas"],
+    model:"dos (estudiantes)", why:"«Somos dos estudiantes» → es wohnen schon zwei dort."},
+   {t:"write", q:"¿Qué hay en la habitación? – Antworte in Stichworten wie in der Klausur-Tabelle." + ANZ1,
+    vars:[["cama","mesa","armario"]], model:"una cama, una mesa y un armario",
+    why:"Alle drei Möbel aus der Anzeige nennen – Stichworte reichen."},
+   {t:"write", q:"¿Qué hay cerca del piso? – Antworte in Stichworten." + ANZ1,
+    vars:[["supermercado","metro"]], model:"un supermercado y una parada de metro",
+    why:"Beides steht am Ende der Anzeige."},
+   {t:"write", q:"¿Están los gastos incluidos? – Antworte mit einem kurzen Satz." + ANZ1,
+    vars:[["no","40"]], model:"No, son 40 € más al mes.",
+    why:"«+ 40 € de gastos» → die Nebenkosten kommen dazu."},
+   {t:"write", q:"Schreib die Frage: Frag auf Spanisch, wie viel das Zimmer kostet.",
+    vars:[["cuanto","cuesta","habitacion"]], model:"¿Cuánto cuesta la habitación?",
+    why:"Die wichtigste Anzeigen-Frage – auch fürs Telefonieren mit dem Vermieter."}
+  ]},
+
+ {id:"k2", nm:"Empfehlungen: si + Imperativ", pts:"Klausur Aufg. 6 · 12 P.", w:12,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/03.html", txt:"Spiel: Imperativ im si-Satz (Stunde 3)", qr:"q03"},
+  game2:{href:"https://ksbknhn.github.io/Unidad-5/01_02.html", txt:"Zweites Spiel: si-Sätze bauen (Stunden 1+2)", qr:"q0102"},
+  kann:["Ich kann Empfehlungen bauen: Si te gusta …, ¡visita / ve / haz …!","Ich kenne die vier Bausteine: tienes que · puedes · te va a gustar · Imperativ."],
+  merk:`<div class="merk orange"><span class="big"><span class="c">Si + Presente,</span> <span class="r">+ Empfehlung</span></span><br>
+    <span class="c">Si te gusta la naturaleza,</span> <span class="r">ve al Parque del Buen Retiro.</span><br>
+    Imperativ (tú) = 3. Person Singular Presente: visitar → <span class="r">visita</span> · comer → <span class="r">come</span><br>
+    ⚡ Ausnahmen: hacer → <span class="r">haz</span> · ir → <span class="r">ve</span> · tener → <span class="r">ten</span></div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Aufg. 6</b> · Buch S. 78–80.`,
+  check:[
+   {t:"mc", q:"Si te gusta el arte, ___ el Museo Reina Sofía.", opts:["visita","visitas","visite"], ok:0,
+    why:"Empfehlung = Imperativ: ¡visita! (visitas wäre eine normale Aussage)."},
+   {t:"mc", q:"Der Imperativ (tú) von «hacer»?", opts:["haz","hace","haces"], ok:0,
+    why:"⚡ Ausnahme: hacer → haz."},
+   {t:"type", q:"Tippe den Imperativ (tú) von «ir»:", accepts:["ve"],
+    model:"ve", why:"⚡ Ausnahme: ir → ve."},
+   {t:"type", q:"Si ___ (tener) poco dinero, ve al Rastro. – Tippe die fehlende Form:", accepts:["tienes"],
+    model:"tienes", why:"Nach si steht das Presente: Si tienes poco dinero, …"},
+   {t:"write", q:"Vervollständige mit dem Imperativ von «visitar»: Si te gusta el fútbol, … <span class='bau'>Bausteine: el estadio</span>",
+    vars:[["visita","estadio"]], model:"… visita el estadio.",
+    why:"si-Teil + Imperativ + Ort – das Klausurmuster von Aufgabe 6b."},
+   {t:"write", q:"Übersetze: «Wenn du Tapas magst, geh nach Malasaña.»",
+    vars:[["si","gustan","tapas","ve","malasana"],["si","gusta","tapas","ve","malasana"]],
+    model:"Si te gustan las tapas, ve a Malasaña.",
+    why:"gustar richtet sich nach den Tapas (Plural → gustan) · ir → ve."},
+   {t:"write", q:"Schreib eine Empfehlung mit «tienes que»: <span class='bau'>Bausteine: la naturaleza · el Retiro</span>",
+    vars:[["si","naturaleza","tienes","que","retiro"]],
+    model:"Si te gusta la naturaleza, tienes que ir al Retiro.",
+    why:"tienes que + Infinitiv ist einer der vier Empfehlungsbausteine."},
+   {t:"open", q:"Dein Satz: Schreib eine eigene Empfehlung mit «haz» über Madrid (ganzer si-Satz).",
+    must:["si","haz"], minWords:6,
+    model:"z. B.: Si quieres ver la ciudad, haz un tour.",
+    why:"Wichtig: si + Presente im ersten Teil, haz im zweiten."}
+  ]},
+
+ {id:"k3", nm:"Pronomen lo, la, los, las", pts:"Klausur Aufg. 1+2 · 17 P.", w:17,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/13_14.html", txt:"Spiel: Objektpronomen (Stunden 13+14)", qr:"q1314"},
+  game2:{href:"https://ksbknhn.github.io/Unidad-5/15_16.html", txt:"Zweites Spiel: Pronomen-Training (Stunden 15+16)", qr:"q1516"},
+  kann:["Ich ersetze Nomen durch lo/la/los/las.","Ich beherrsche beide Stellungen: Lo voy a comprar = Voy a comprarlo.","Ich denke an den Akzent: estoy leyéndolos."],
+  merk:`<div class="merk orange"><span class="big">🎯 lo · la · los · las</span> – stehen <u>vor</u> dem konjugierten Verb:<br>
+    ¿El folleto? <span class="r">Lo</span> tengo aquí.<br>
+    Bei Infinitiv/Gerundium – <b>beide Stellungen richtig</b>:<br>
+    <span class="r">La</span> voy a llamar. = Voy a llamar<span class="r">la</span>.<br>
+    ⚠️ Angehängt ans Gerundium → Akzent: esper<span class="r">á</span>ndola, ley<span class="r">é</span>ndolos.</div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Aufg. 1 + 2</b> (die 12-Punkte-Aufgabe!) · Grammatik 42/43.`,
+  check:[
+   {t:"mc", q:"¿El piso? ___ busco en internet.", opts:["Lo","La","Los"], ok:0,
+    why:"el piso = maskulin Singular → Lo."},
+   {t:"mc", q:"«Voy a comprarlas.» – Worum geht es?", opts:["las entradas","el folleto","los churros"], ok:0,
+    why:"-las = feminin Plural → las entradas."},
+   {t:"type", q:"¿Las entradas? ___ compro online. – Tippe das Pronomen:", accepts:["las"],
+    model:"Las", why:"las entradas = feminin Plural → Las compro."},
+   {t:"type", q:"Marta ruft an → Ich rufe SIE heute an: ___ llamo hoy. – Tippe das Pronomen:", accepts:["la"],
+    model:"La", why:"a Marta = feminin Singular → La llamo."},
+   {t:"write", q:"Antworte mit Pronomen: ¿Dónde vas a comprar el folleto? <span class='bau'>→ en la oficina de turismo</span>",
+    vars:[["lo voy a comprar","oficina"],["voy a comprarlo","oficina"]],
+    model:"Lo voy a comprar en la oficina. / Voy a comprarlo en la oficina.",
+    why:"Beide Stellungen sind richtig – such dir eine aus."},
+   {t:"write", q:"Antworte mit Pronomen: ¿Estás esperando a Soledad? <span class='bau'>→ Sí</span>",
+    vars:[["la estoy esperando"],["estoy esperandola"]],
+    model:"Sí, la estoy esperando. / Sí, estoy esperándola.",
+    why:"Angehängt ans Gerundium bekommt das Verb einen Akzent: esperándola."},
+   {t:"write", q:"Schreib BEIDE Varianten in eine Antwort (mit / getrennt): ¿Vas a leer los anuncios? – Sí, …",
+    vars:[["los voy a leer","leerlos"]],
+    model:"Sí, los voy a leer. / Sí, voy a leerlos.",
+    why:"In Klausuraufgabe 2 musst du genau so beide Möglichkeiten schreiben."},
+   {t:"write", q:"Übersetze: «Ich will sie probieren.» (die Tapas)",
+    vars:[["las quiero probar"],["quiero probarlas"]],
+    model:"Las quiero probar. / Quiero probarlas.",
+    why:"las tapas → las · beide Stellungen möglich."}
+  ]},
+
+ {id:"k4", nm:"Superlative", pts:"Klausur Aufg. 3+4 · 11 P.", w:11,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/17_18.html", txt:"Spiel: Superlative (Stunden 17+18)", qr:"q1718"},
+  game2:null,
+  kann:["Ich sage, was die Nummer 1 ist: el mercado más famoso de Madrid.","Ich verstärke mit -ísimo: riquísimo, carísimas – richtig geschrieben."],
+  merk:`<div class="merk orange"><span class="big">🏆 Relativ:</span> el/la/los/las + Nomen + <span class="r">más/menos</span> + Adjektiv + <span class="r">de</span> …<br>
+    El Rastro es <span class="r">el</span> mercado <span class="r">más</span> famoso <span class="r">de</span> Madrid. · bueno → <span class="r">el/la mejor</span> · malo → <span class="r">el/la peor</span><br>
+    <span class="big">💥 Absolut:</span> Adjektiv ohne Endvokal + <span class="r">-ísimo/-a/-os/-as</span><br>
+    ⚡ ri<span class="r">co</span> → ri<span class="r">quísimo</span> · fres<span class="r">co</span> → fres<span class="r">quísimo</span> – und immer Akzent auf dem í!</div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Aufg. 3 + 4</b> · Buch S. 88, Aufg. 2 + 3 · Grammatik 44/45.`,
+  check:[
+   {t:"mc", q:"El Rastro es el mercado ___ famoso de Madrid.", opts:["más","muy","tan"], ok:0,
+    why:"Relativer Superlativ: el + Nomen + más + Adjektiv + de."},
+   {t:"mc", q:"bueno → «la ___ vista de Madrid»", opts:["mejor","más buena","buenísima"], ok:0,
+    why:"Sonderform: bueno → mejor, und sie steht vor dem Nomen."},
+   {t:"type", q:"¡Los churros están … ! (rico) – Tippe die -ísimo-Form:", accepts:["riquisimos"],
+    model:"riquísimos", why:"⚡ c → qu, maskulin Plural, Akzent auf dem í."},
+   {t:"type", q:"¡Las tapas están … ! (fresco) – Tippe die -ísimo-Form:", accepts:["fresquisimas"],
+    model:"fresquísimas", why:"⚡ c → qu, feminin Plural."},
+   {t:"write", q:"Baue den Satz: <span class='bau'>Bausteine: el Rastro · mercado · + famoso · Madrid</span>",
+    vars:[["rastro","el mercado mas famoso","madrid"]],
+    model:"El Rastro es el mercado más famoso de Madrid.",
+    why:"Schema: el + Nomen + más + Adjektiv + de …"},
+   {t:"write", q:"Baue den Satz: <span class='bau'>Bausteine: la Casa de Granada · vista · bueno</span>",
+    vars:[["casa de granada","la mejor vista"]],
+    model:"La Casa de Granada tiene la mejor vista de Madrid.",
+    why:"bueno → mejor, VOR dem Nomen: la mejor vista."},
+   {t:"write", q:"Verstärke den ganzen Satz mit -ísimo: «El barrio es muy chulo.»",
+    vars:[["barrio","chulisimo"]],
+    model:"¡El barrio es chulísimo!",
+    why:"muy chulo → chulísimo (das muy fällt weg)."},
+   {t:"write", q:"Übersetze: «Für mich sind die Museen die interessantesten Orte Madrids.»",
+    vars:[["museos","mas interesantes"]],
+    model:"Para mí, los museos son los sitios más interesantes de Madrid.",
+    why:"Plural-Superlativ: los sitios más interesantes de …"}
+  ]},
+
+ {id:"k5", nm:"Wohnung: Möbel + Präpositionen", pts:"Klausur Aufg. 5", w:15,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/08.html", txt:"Spiel: Der Kater im Zimmer (Stunde 8)", qr:"q08"},
+  game2:null,
+  kann:["Ich benenne die Möbel auf Spanisch.","Ich sage, wo etwas steht: La lámpara está encima de la mesa."],
+  merk:`<div class="merk blue"><span class="big">🐈 Wo sitzt der Kater?</span>
+    <div class="prepgrid">
+      <div class="prep"><div class="sc">🐈<br>📦</div><div class="es">encima de</div><div class="de">auf</div></div>
+      <div class="prep"><div class="sc">📦<br>🐈</div><div class="es">debajo de</div><div class="de">unter</div></div>
+      <div class="prep"><div class="sc">🐈 📦</div><div class="es">al lado de</div><div class="de">neben</div></div>
+      <div class="prep"><div class="sc">📦 🐈</div><div class="es">delante de</div><div class="de">vor</div></div>
+      <div class="prep"><div class="sc">🐈 📦</div><div class="es">detrás de</div><div class="de">hinter</div></div>
+      <div class="prep"><div class="sc">📦🐈📦</div><div class="es">entre … y …</div><div class="de">zwischen</div></div>
+    </div>
+    Dazu: <span class="t">a la izquierda</span> (links) · <span class="t">a la derecha</span> (rechts) – und immer mit <b>está</b>.</div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Aufg. 5</b> · Möbel-Vokabeln S. 310 · Buch S. 83, Aufg. 7.`,
+  check:[
+   {t:"mc", q:"«auf / über» heißt:", opts:["encima de","debajo de","detrás de"], ok:0,
+    why:"encima de = auf/über (debajo = unter, detrás = hinter)."},
+   {t:"mc", q:"La lámpara ___ encima de la mesa.", opts:["está","es","hay"], ok:0,
+    why:"Der Standort von etwas Bestimmtem → está."},
+   {t:"type", q:"Tippe: «zwischen» =", accepts:["entre"],
+    model:"entre", why:"entre la cama y la mesa = zwischen Bett und Tisch."},
+   {t:"type", q:"Tippe: «der Schrank» = (mit Artikel)", accepts:["el armario","armario"],
+    model:"el armario", why:"Nicht verwechseln: la estantería = das Regal."},
+   {t:"write", q:"Beschreibe: <span class='bau'>Bausteine: la alfombra · Bett ↔ Tisch</span>",
+    vars:[["alfombra","esta","entre","cama","mesa"]],
+    model:"La alfombra está entre la cama y la mesa.",
+    why:"está + entre … y …"},
+   {t:"write", q:"Beschreibe: <span class='bau'>Bausteine: la estantería · neben · la ventana</span>",
+    vars:[["estanteria","al lado de","ventana"]],
+    model:"La estantería está al lado de la ventana.",
+    why:"neben = al lado de."},
+   {t:"write", q:"Übersetze: «Der Papierkorb steht hinter der Tür.»",
+    vars:[["papelera","detras de","puerta"]],
+    model:"La papelera está detrás de la puerta.",
+    why:"hinter = detrás de · der Papierkorb = la papelera."},
+   {t:"open", q:"Dein Satz: Beschreib EIN Möbelstück in deinem Zimmer mit einer Ortspräposition.",
+    must:["esta"], anyOf:{list:["encima de","debajo de","al lado de","delante de","detras de","entre"], min:1}, minWords:5,
+    model:"z. B.: Mi cama está al lado de la ventana.",
+    why:"está + Präposition + Ort – genau das braucht der Klausur-Lückentext."}
+  ]},
+
+ {id:"k6", nm:"Wegbeschreibung", pts:"Klausur Aufg. 7 · 8 P.", w:8,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/11_12.html", txt:"Spiel: Karte und Telefon (Stunden 11+12)", qr:"q1112"},
+  game2:null,
+  kann:["Ich verstehe eine Wegbeschreibung mit Karte.","Ich beschreibe selbst: cruzas, giras, sigues todo recto, coges la primera calle."],
+  merk:`<div class="merk orange"><span class="big">🗺️ Zu Fuß:</span>
+    <span class="r">sigues todo recto</span> (geradeaus) · <span class="r">cruzas</span> la calle/la plaza (überqueren) ·
+    <span class="r">giras</span> a la derecha/izquierda (abbiegen) · <span class="r">coges</span> la primera/segunda calle (nehmen) ·
+    está al final de la calle<br>
+    <span class="big">🚇 Metro:</span> <span class="r">Coges</span> la línea [Farbe] <span class="r">en dirección a</span> [Station]
+    <span class="r">y te bajas en</span> la [quinta] parada.</div>`,
+  tipp:`Weiteres Training: <b>Übungsklausur Aufg. 7</b> (mit Karte!) · Buch S. 84.`,
+  check:[
+   {t:"mc", q:"«du gehst geradeaus weiter» heißt:", opts:["sigues todo recto","giras todo recto","cruzas todo recto"], ok:0,
+    why:"seguir todo recto = geradeaus weitergehen."},
+   {t:"mc", q:"Coges la línea roja en dirección ___ Sol.", opts:["a","de","en"], ok:0,
+    why:"en dirección a + Endstation."},
+   {t:"type", q:"Tippe die tú-Form: «du überquerst» (cruzar) =", accepts:["cruzas"],
+    model:"cruzas", why:"Die Wegbeschreibung steht in der 2. Person: cruzas, giras, sigues."},
+   {t:"type", q:"Te bajas en la ___ parada. (5.) – Tippe die Ordinalzahl:", accepts:["quinta"],
+    model:"quinta", why:"An la parada (feminin) angeglichen: la quinta parada."},
+   {t:"write", q:"Baue den Metro-Satz: <span class='bau'>Bausteine: línea azul · Sol · 3.ª parada</span>",
+    vars:[["coges","linea azul","te bajas","tercera parada"]],
+    model:"Coges la línea azul en dirección a Sol y te bajas en la tercera parada.",
+    why:"Die drei festen Bausteine: coges … en dirección a … y te bajas en …"},
+   {t:"write", q:"Übersetze: «Du nimmst die erste Straße links.»",
+    vars:[["coges","primera calle","izquierda"]],
+    model:"Coges la primera calle a la izquierda.",
+    why:"coger la primera/segunda calle + a la izquierda/derecha."},
+   {t:"write", q:"Übersetze: «Du überquerst den Platz und biegst rechts ab.»",
+    vars:[["cruzas","plaza","giras","derecha"]],
+    model:"Cruzas la plaza y giras a la derecha.",
+    why:"cruzar = überqueren · girar = abbiegen."},
+   {t:"write", q:"Antworte: ¿Cómo llego a la cafetería? <span class='bau'>→ geradeaus bis zur Ecke, dann links</span>",
+    vars:[["todo recto","esquina","izquierda"]],
+    model:"Sigues todo recto hasta la esquina y giras a la izquierda.",
+    why:"hasta la esquina = bis zur Ecke."}
+  ]},
+
+ {id:"k7", nm:"Wortschatz Unidad 5", pts:"quer durch alle Aufgaben", w:6,
+  game:{href:"https://ksbknhn.github.io/Unidad-5/06_07.html", txt:"Spiel: Dialog und Vergleiche (Stunden 6+7)", qr:"q0607"},
+  game2:null,
+  kann:["Ich kenne den Lernwortschatz der Unidad 5 (Buch S. 308–313)."],
+  merk:`<div class="merk blue"><span class="big">📚 So lernst du die Vokabeln smart:</span><br>
+    Lerne in <b>Wortfeldern</b>: Orte in Madrid (S. 308) → Wohnung + Möbel (S. 309/310) → Weg + Telefon (S. 311) → sitios (S. 312).<br>
+    Teste dich mit den Level 1 aller Spiele – jedes beginnt mit dem Wortschatz seines Themas.</div>`,
+  tipp:`Weiteres Training: Vokabelliste S. 308–313 · die Level 1 aller Spiele.`,
+  check:[
+   {t:"mc", q:"«la vista» heißt:", opts:["die Aussicht","der Besuch","die Straße"], ok:0,
+    why:"la vista = die Aussicht (¡la mejor vista de Madrid!)."},
+   {t:"mc", q:"«luminoso/-a» heißt:", opts:["hell","laut","leer"], ok:0,
+    why:"luminoso/-a = hell – das Lieblingswort jeder Wohnungsanzeige."},
+   {t:"type", q:"Tippe: «die Miete» = (mit Artikel)", accepts:["el alquiler","alquiler"],
+    model:"el alquiler", why:"alquilar = mieten · el alquiler = die Miete."},
+   {t:"type", q:"Tippe: «bekannt» =", accepts:["conocido","conocida"],
+    model:"conocido/-a", why:"conocer = kennen → conocido = bekannt."},
+   {t:"write", q:"Übersetze: «das möblierte Zimmer»",
+    vars:[["habitacion","amueblada"]],
+    model:"la habitación amueblada",
+    why:"Das Adjektiv passt sich an: amueblada (feminin)."},
+   {t:"write", q:"Übersetze: «Ich suche eine Wohnung in Madrid.»",
+    vars:[["busco","piso","madrid"]],
+    model:"Busco un piso en Madrid.",
+    why:"buscar ohne Präposition: busco un piso (nicht «busco por»)."},
+   {t:"open", q:"Nenne DREI Möbel auf Spanisch (mit Komma getrennt).",
+    anyOf:{list:["cama","mesa","silla","armario","sofa","sillon","alfombra","estanteria","lampara","papelera"], min:3}, minWords:3,
+    model:"z. B.: la cama, la mesa, el armario",
+    why:"Zehn Möbel kennst du aus Stunde 8 – drei davon reichen hier."},
+   {t:"write", q:"Übersetze: «der bekannteste Markt der Stadt»",
+    vars:[["mercado","mas conocido","ciudad"]],
+    model:"el mercado más conocido de la ciudad",
+    why:"Wortschatz + Superlativ kombiniert – Klausurniveau!"}
+  ]}
+];
+
+/* ================= STATE ================= */
+const KEY = "u5kann.v2";
+let state = {checks:{}, self:{}};
+try{ const s = localStorage.getItem(KEY); if(s) state = JSON.parse(s); }catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+function statusOf(k){
+  const c = state.checks[k.id]; const s = state.self[k.id];
+  if(c === undefined && !s) return "n";
+  const good = c !== undefined ? (c >= 7) : null;
+  const bad  = c !== undefined ? (c <= 4) : null;
+  if(bad || s === "r") return "r";
+  if(good && (s === "g" || !s)) return "g";
+  return "y";
+}
+
+/* ================= DASHBOARD ================= */
+function renderDash(){
+  const tiles = document.getElementById("tiles"); tiles.innerHTML = "";
+  const reds = [], yels = [], opens = [];
+  KOMP.forEach(function(k){
+    const st = statusOf(k);
+    const b = document.createElement("button");
+    b.className = "tile st-" + st;
+    const c = state.checks[k.id];
+    const info = c !== undefined ? ("Check: " + c + "/8") : "noch offen";
+    b.innerHTML = '<span class="dot"></span><span class="nm">' + k.nm + '</span><span class="pt">' + k.pts + ' · ' + info + '</span>';
+    b.onclick = function(){ const sec = document.getElementById(k.id); sec.classList.add("open"); sec.scrollIntoView({behavior:"smooth"}); };
+    tiles.appendChild(b);
+    if(st === "r") reds.push(k); else if(st === "y") yels.push(k); else if(st === "n") opens.push(k);
+    const sec = document.getElementById(k.id);
+    if(sec){ sec.classList.remove("st-g","st-y","st-r"); if(st !== "n") sec.classList.add("st-" + st); }
+  });
+  reds.sort(function(a,b){return b.w - a.w;}); yels.sort(function(a,b){return b.w - a.w;});
+  const plan = document.getElementById("plan");
+  const tested = KOMP.length - opens.length;
+  if(tested === 0){
+    plan.className = "plan empty";
+    plan.innerHTML = "<b>👋 Leg los!</b>Mach in jedem Bereich den 8-Stufen-Check und schätze dich ein – dann baut sich hier dein persönlicher Lernplan auf.";
+  } else if(reds.length === 0 && yels.length === 0 && opens.length === 0){
+    plan.className = "plan done";
+    plan.innerHTML = "<b>🎉 Alles grün – du bist bereit!</b>Generalprobe: Schreib jetzt die <a href='#klausur'>Übungsklausur</a> unter Klausurbedingungen.";
+  } else {
+    plan.className = "plan todo";
+    let h = "<b>🎯 Dein Lernplan – hier holst du die meisten Punkte:</b>";
+    reds.slice(0,3).forEach(function(k,i){ h += (i+1) + ". 🔴 <a href='#" + k.id + "'>" + k.nm + "</a> (" + k.pts.replace("Klausur ","") + ")<br>"; });
+    yels.slice(0, Math.max(0, 3 - reds.length)).forEach(function(k){ h += "· 🟡 <a href='#" + k.id + "'>" + k.nm + "</a> festigen<br>"; });
+    if(opens.length) h += "<span style='font-weight:400'>⚪ Noch " + opens.length + " Bereich(e) ohne Check – teste dich dort zuerst.</span>";
+    plan.innerHTML = h;
+  }
+}
+
+/* ================= SEKTIONEN ================= */
+function gameRow(g, alt){
+  return '<div class="gamewrap">'
+    + '<a class="game' + (alt ? ' alt' : '') + '" href="' + g.href + '"><span class="ic">📱</span>' + g.txt + '</a>'
+    + '<div class="qrbox">' + qrSvg(g.qr) + '<span>QR scannen</span></div>'
+    + '</div>';
+}
+function buildSections(){
+  const host = document.getElementById("sections");
+  KOMP.forEach(function(k){
+    const sec = document.createElement("section");
+    sec.className = "card komp"; sec.id = k.id;
+    let h = '<div class="khead" onclick="this.parentElement.classList.toggle(\'open\')">'
+      + '<span class="dot"></span><h2>' + k.nm + '</h2><span class="pts">' + k.pts + '</span><span class="chev">▶</span></div>'
+      + '<div class="kbody">'
+      + '<div class="kann">' + k.kann.map(function(x){return "<div>" + x + "</div>";}).join("") + '</div>'
+      + '<h3 class="sub">🧠 Merkwissen</h3>' + k.merk
+      + '<h3 class="sub">✏️ Mini-Check (8 Aufgaben: Einsetzen → Formen → selbst schreiben)</h3><div class="check" id="chk-' + k.id + '"></div>'
+      + '<h3 class="sub">🚦 Wie sicher fühlst du dich hier?</h3>'
+      + '<div class="ampel" id="amp-' + k.id + '">'
+      + '<button onclick="setSelf(\'' + k.id + '\',\'g\')">🟢 sicher</button>'
+      + '<button onclick="setSelf(\'' + k.id + '\',\'y\')">🟡 teils</button>'
+      + '<button onclick="setSelf(\'' + k.id + '\',\'r\')">🔴 unsicher</button></div>'
+      + '<h3 class="sub">🎮 Üben – tippen oder QR scannen</h3><div class="uben">'
+      + gameRow(k.game, false)
+      + (k.game2 ? gameRow(k.game2, true) : '')
+      + '<div class="tip">' + k.tipp + '</div></div>'
+      + '</div>';
+    sec.innerHTML = h;
+    host.appendChild(sec);
+    renderCheck(k);
+    renderAmpel(k.id);
+  });
+}
+
+function renderAmpel(id){
+  const box = document.getElementById("amp-" + id);
+  const v = state.self[id];
+  const keys = ["g","y","r"];
+  Array.prototype.forEach.call(box.children, function(b,i){
+    b.className = "";
+    if(v === keys[i]) b.classList.add("sel-" + keys[i]);
+  });
+}
+function setSelf(id, v){
+  state.self[id] = v; save();
+  renderAmpel(id); renderDash();
+}
+
+/* ================= MINI-CHECK ================= */
+const runs = {};
+function norm(s){
+  return (" " + s.trim().toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[¡!¿?.,;:·«»()\/\-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim() + " ");
+}
+function shuffle(a){ return a.map(function(v){return [Math.random(),v];}).sort(function(x,y){return x[0]-y[0];}).map(function(v){return v[1];}); }
+function stageOf(i){
+  if(i < 2) return ['s1','Leicht · Einsetzen'];
+  if(i < 4) return ['s2','Mittel · Form schreiben'];
+  return ['s3','Profi · Selbst schreiben'];
+}
+function checkWrite(item, raw){
+  const a = norm(raw);
+  return item.vars.some(function(reqs){
+    return reqs.every(function(r){ return a.indexOf(" " + r + " ") !== -1; });
+  });
+}
+function checkOpen(item, raw){
+  const a = norm(raw);
+  const words = a.trim().split(" ").filter(function(w){return w;});
+  if(item.minWords && words.length < item.minWords) return false;
+  if(item.must && !item.must.every(function(r){ return a.indexOf(" " + r + " ") !== -1; })) return false;
+  if(item.anyOf){
+    const hits = item.anyOf.list.filter(function(r){ return a.indexOf(" " + r + " ") !== -1; });
+    if(hits.length < item.anyOf.min) return false;
+  }
+  return true;
+}
+
+function renderCheck(k){
+  const box = document.getElementById("chk-" + k.id);
+  const done = state.checks[k.id];
+  if(done !== undefined && !runs[k.id]){
+    const msg = done >= 7 ? "Stark – dieser Bereich sitzt, auch beim freien Schreiben! ✅"
+      : done >= 5 ? "Gut dabei – die Schreibaufgaben brauchen noch Übung. Merkwissen lesen, Spiel spielen, dann wiederholen. 🟡"
+      : "Hier lohnt sich Üben: erst Merkwissen lesen, dann das Spiel – und den Check morgen wiederholen. 🔴";
+    box.innerHTML = '<div class="cres"><div class="sc">' + done + ' / 8</div><p>' + msg + '</p>'
+      + '<button onclick="startCheck(\'' + k.id + '\')">Check wiederholen</button></div>';
+    return;
+  }
+  if(!runs[k.id]){
+    box.innerHTML = '<div class="cres"><p style="margin-top:0">8 Aufgaben in 3 Stufen: erst einsetzen, dann Formen schreiben, am Ende ganze Sätze – wie in der Klausur.</p>'
+      + '<button style="background:var(--cond); color:#fff;" onclick="startCheck(\'' + k.id + '\')">Check starten</button></div>';
+    return;
+  }
+  const run = runs[k.id];
+  const item = k.check[run.i];
+  const st = stageOf(run.i);
+  let h = '<span class="stage ' + st[0] + '">' + st[1] + '</span>'
+    + '<div class="q">' + item.q + '</div>';
+  if(item.t === "mc"){
+    h += '<div class="opts">' + run.order.map(function(oi){
+      return '<button class="opt" onclick="answerMC(\'' + k.id + '\',' + oi + ', this)">' + item.opts[oi] + '</button>';
+    }).join("") + '</div>';
+  } else {
+    h += '<div class="typerow"><input id="ti-' + k.id + '" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="'
+      + (item.t === "type" ? "Wort/Form tippen …" : "Ganzen Satz tippen …") + '">'
+      + '<button onclick="answerText(\'' + k.id + '\')">OK</button></div>'
+      + '<div class="thint">💡 Akzente darfst du weglassen – die Schreibung zählt trotzdem (z. B. qu bei riquísimo).</div>';
+  }
+  h += '<div class="fb" id="fb-' + k.id + '"></div>'
+    + '<div class="cnav"><span class="cnt">Aufgabe ' + (run.i+1) + ' / 8</span>'
+    + '<button id="nx-' + k.id + '" disabled onclick="nextItem(\'' + k.id + '\')">' + (run.i === 7 ? "Auswerten" : "Weiter") + '</button></div>';
+  box.innerHTML = h;
+  if(item.t !== "mc"){
+    const inp = document.getElementById("ti-" + k.id);
+    inp.addEventListener("keydown", function(e){ if(e.key === "Enter") answerText(k.id); });
+  }
+}
+function startCheck(id){
+  const k = KOMP.find(function(x){return x.id === id;});
+  const first = k.check[0];
+  runs[id] = {i:0, score:0, answered:false, order: first.t === "mc" ? shuffle(first.opts.map(function(_,n){return n;})) : []};
+  renderCheck(k);
+}
+function answerMC(id, oi, btn){
+  const k = KOMP.find(function(x){return x.id === id;}); const run = runs[id];
+  if(run.answered) return;
+  const item = k.check[run.i];
+  const fb = document.getElementById("fb-" + id);
+  run.answered = true;
+  document.querySelectorAll("#chk-" + id + " .opt").forEach(function(b){ b.disabled = true; });
+  if(oi === item.ok){
+    btn.classList.add("ok"); run.score++;
+    fb.className = "fb show good"; fb.innerHTML = "✓ " + item.why;
+  } else {
+    btn.classList.add("no");
+    document.querySelectorAll("#chk-" + id + " .opt").forEach(function(b){ if(b.textContent === item.opts[item.ok]) b.classList.add("ok"); });
+    fb.className = "fb show bad"; fb.innerHTML = "✗ Richtig ist: «" + item.opts[item.ok] + "» – " + item.why;
+  }
+  document.getElementById("nx-" + id).disabled = false;
+}
+function answerText(id){
+  const k = KOMP.find(function(x){return x.id === id;}); const run = runs[id];
+  if(run.answered) return;
+  const item = k.check[run.i];
+  const inp = document.getElementById("ti-" + id);
+  if(norm(inp.value).trim() === ""){ inp.focus(); return; }
+  const fb = document.getElementById("fb-" + id);
+  let correct = false;
+  if(item.t === "type"){
+    const a = norm(inp.value).trim();
+    correct = item.accepts.some(function(x){ return a === x; });
+  } else if(item.t === "write"){
+    correct = checkWrite(item, inp.value);
+  } else {
+    correct = checkOpen(item, inp.value);
+  }
+  run.answered = true; inp.disabled = true;
+  if(correct){
+    inp.classList.add("ok"); run.score++;
+    fb.className = "fb show good";
+    fb.innerHTML = "✓ ¡Muy bien! Musterlösung: «" + item.model + "» – " + item.why;
+  } else {
+    inp.classList.add("no");
+    fb.className = "fb show bad";
+    fb.innerHTML = "✗ Musterlösung: «" + item.model + "» – " + item.why + " Vergleiche genau mit deiner Antwort.";
+  }
+  document.getElementById("nx-" + id).disabled = false;
+}
+function nextItem(id){
+  const k = KOMP.find(function(x){return x.id === id;}); const run = runs[id];
+  if(run.i === 7){
+    state.checks[id] = run.score; save();
+    delete runs[id];
+    renderCheck(k); renderDash();
+    return;
+  }
+  run.i++; run.answered = false;
+  const item = k.check[run.i];
+  run.order = item.t === "mc" ? shuffle(item.opts.map(function(_,n){return n;})) : [];
+  renderCheck(k);
+}
+
+/* ================= RESET ================= */
+function resetAll(){
+  if(!confirm("Deinen gespeicherten Lernstand wirklich löschen?")) return;
+  state = {checks:{}, self:{}};
+  try{ localStorage.removeItem(KEY); }catch(e){}
+  Object.keys(runs).forEach(function(x){ delete runs[x]; });
+  KOMP.forEach(function(k){ renderCheck(k); renderAmpel(k.id); });
+  renderDash();
+}
+
+/* ================= INIT ================= */
+buildSections();
+renderDash();
+</script>
+</body>
+</html>
